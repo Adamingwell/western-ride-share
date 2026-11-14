@@ -20,7 +20,7 @@ Scope: static inspection of `docs/auth.js`, `docs/board.html`, `docs/admin.html`
 4. **MEDIUM — Email delivery retries:** `notify-safety-report` claims a report before calling Resend; a failed delivery stays marked `failed`, but repeat requests return `already_processed`. Add a restricted retry workflow with idempotency and rate limits.
 5. **MEDIUM — Message email trigger:** `notify-ride-message` looks up the latest message by sender and thread rather than accepting a unique message ID; concurrent messages may cause missed alerts. Evaluate message-ID-based notification and server-side queuing.
 6. **MEDIUM — Auth controls:** Email confirmation, signup restrictions, redirect allowlist, password policy, MFA for admins, and rate limits are Supabase dashboard settings not verifiable from the repository. Review them before launch.
-7. **LOW — Profile name normalization:** `auth.js` and `board.html` use `/\\s+/g` instead of `/\s+/g` in the JavaScript source, so repeated whitespace is not normalized as intended. This is a data-quality issue, not an authorization bypass.
+7. **LOW — Profile name normalization:** `docs/board.html` used an incorrectly escaped whitespace regular expression; corrected in the feature branch. `docs/auth.js` already used the intended expression.
 
 ## Required deployment/test checklist
 1. Run `supabase/011_message_write_hardening.sql` in the preview Supabase project. Note: preview and production sites currently share the same Supabase project, so database changes can affect live users even without merging GitHub branches. Schedule and back up accordingly.
