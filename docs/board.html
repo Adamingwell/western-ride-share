@@ -18,6 +18,7 @@ button:hover:not(:disabled){filter:brightness(1.07)}button:disabled{opacity:.65;
 .site-header{flex-wrap:wrap}.site-nav{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .site-nav a,.site-nav button{font:inherit;font-size:.9rem;padding:9px 11px;border-radius:9px}
 .site-nav a{color:#214537;text-decoration:none}.site-nav a:hover{background:#dfebde;text-decoration:underline}
+#adminLink[hidden]{display:none}
 .site-nav a:focus-visible,#accountDialog a:focus-visible{outline:3px solid #41774f;outline-offset:3px}
 #accountEmail{overflow-wrap:anywhere}#accountDialog form{margin:16px 0}#accountDialog a{color:#143f35;font-weight:700}
 
@@ -77,6 +78,7 @@ button:hover:not(:disabled){filter:brightness(1.07)}button:disabled{opacity:.65;
     <a href="#rideBoard">Ride board</a>
     <button type="button" class="alt" id="inbox">Messages <span id="unreadBadge" class="unread-badge" hidden aria-label="Unread messages"></span></button>
     <button type="button" id="accountButton">Account</button>
+    <a href="./admin.html" id="adminLink" hidden>Administration</a>
     <button type="button" class="alt" id="headerSignOut">Sign out</button>
   </nav>
 </header>
@@ -190,6 +192,11 @@ document.getElementById('signOut').addEventListener('click',signOut);
 document.getElementById('headerSignOut').addEventListener('click',signOut);
 
 const get = id => document.getElementById(id);
+async function showAdminLink() {
+  const {data, error} = await supabase.rpc('is_site_admin');
+  if (!error && data === true) get('adminLink').hidden = false;
+}
+showAdminLink().catch(() => {});
 const form = get('post');
 const routeGroups = [['SMRT communities', ['Coon Valley','De Soto','Ferryville','Genoa','La Crosse','Lynxville','Onalaska','Prairie du Chien','Sparta','Stoddard','Tomah','Viroqua','West Salem','Westby']]];
 for (const id of ['community','filterCommunity']) {
