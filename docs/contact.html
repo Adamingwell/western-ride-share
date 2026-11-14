@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact admin · Western Ride Share</title>
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./auth.css">
+</head>
+<body>
+<header class="shell"><a class="brand" href="./">Western Ride Share</a><nav aria-label="Page navigation"><a href="./board.html">Ride board</a><a href="./sign-in.html">Sign in</a></nav></header>
+<main class="shell" style="max-width:640px">
+<section class="auth-card">
+<h1 style="font-size:2.4rem">Contact admin</h1>
+<p>Ask for help with your account or the site. For a safety concern involving a ride or conversation, use <strong>Report</strong> on the ride board.</p>
+<form id="contact-form">
+<label for="reply-email">Your reply email</label>
+<input id="reply-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+<label for="support-message">Message</label>
+<textarea id="support-message" name="message" rows="6" maxlength="2000" required style="display:block;width:100%;font:inherit;margin:6px 0 16px;padding:10px;border:1px solid #9db8a5;border-radius:8px"></textarea>
+<p>Do not include your password or recovery codes.</p>
+<button class="cta" type="submit">Send message</button>
+<p id="contact-status" role="status"></p>
+</form>
+</section>
+</main>
+<script type="module">
+import { SUPABASE_URL } from './supabase-config.js';
+
+const form = document.querySelector('#contact-form');
+const status = document.querySelector('#contact-status');
+const submit = form.querySelector('button');
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  const message = form.elements.message.value.trim();
+  if (!message) {
+    status.textContent = 'Enter a message.';
+    form.elements.message.focus();
+    return;
+  }
+  submit.disabled = true;
+  status.textContent = 'Sending…';
+  try {
+    const response = await fetch(SUPABASE_URL + '/functions/v1/contact-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: form.elements.email.value.trim(), message }),
+    });
+    const result = await response.json();
+    if (!response.ok || result.sent !== true) {
+      status.textContent = [400, 413, 429].includes(response.status) && typeof result.error === 'string'
+        ? result.error : 'Unable to send your message. Please try again later.';
+      return;
+    }
+    form.reset();
+    status.textContent = 'Message sent. The administrator can reply to your email.';
+  } catch {
+    status.textContent = 'Unable to send your message. Please try again later.';
+  } finally {
+    submit.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
