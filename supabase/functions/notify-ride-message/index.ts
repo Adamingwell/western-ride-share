@@ -22,7 +22,12 @@ Deno.serve(async (request) => {
   const {data:message,error:messageError}=await admin.from('ride_messages')
     .select('id,thread_id,poster_id,visitor_id,sender_id,subject,body')
     .eq('thread_id',threadId).eq('sender_id',user.id).order('sent_at',{ascending:false}).limit(1).maybeSingle();
-  if(messageError||!message||message.sender_id!==user.id)return reply(403,{error:'Message not found or not yours'});
+  if(messageError) {
+    console.error('Notification message lookup failed', {code:messageError.code, message:messageError.message});
+    return reply(500,{error:'Message lookup failed',code:messageError.code||'unknown'});
+  }
+  if(!message)return reply(404,{error:'No message found for this sender in the conversation'});
+  if(message.sender_id!==user.id)return reply(403,{error:'Message sender mismatch'});
   const recipientId=message.sender_id===message.poster_id?message.visitor_id:message.poster_id;
   const {data:pref,error:prefError}=await admin.from('notification_preferences').select('email_enabled').eq('user_id',recipientId).maybeSingle();
   if(prefError)return reply(500,{error:'Unable to read notification preference'});
