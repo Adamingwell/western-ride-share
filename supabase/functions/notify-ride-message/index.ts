@@ -3,7 +3,7 @@
 // SUPABASE_URL is supplied by Supabase. Never expose secrets in GitHub Pages.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 Deno.serve(async (request) => {
-  const headers = { 'Content-Type':'application/json', 'Access-Control-Allow-Origin':'*', 'Access-Control-Allow-Headers':'authorization, apikey, content-type', 'Access-Control-Allow-Methods':'POST, OPTIONS' };
+  const headers = { 'Content-Type':'application/json', 'Access-Control-Allow-Origin':'https://adamingwell.github.io', 'Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info', 'Access-Control-Allow-Methods':'POST, OPTIONS' };
   const reply = (status:number, body:unknown) => new Response(JSON.stringify(body),{status,headers});
   if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
   if(request.method!=='POST')return reply(405,{error:'Method not allowed'});
@@ -21,7 +21,7 @@ Deno.serve(async (request) => {
   if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(threadId||''))return reply(400,{error:'Invalid thread'});
   const {data:message,error:messageError}=await admin.from('ride_messages')
     .select('id,thread_id,poster_id,visitor_id,sender_id,subject,body')
-    .eq('thread_id',threadId).order('sent_at',{ascending:false}).limit(1).maybeSingle();
+    .eq('thread_id',threadId).eq('sender_id',user.id).order('sent_at',{ascending:false}).limit(1).maybeSingle();
   if(messageError||!message||message.sender_id!==user.id)return reply(403,{error:'Message not found or not yours'});
   const recipientId=message.sender_id===message.poster_id?message.visitor_id:message.poster_id;
   const {data:pref,error:prefError}=await admin.from('notification_preferences').select('email_enabled').eq('user_id',recipientId).maybeSingle();
