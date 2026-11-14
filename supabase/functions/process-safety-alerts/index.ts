@@ -29,7 +29,7 @@ Deno.serve(async req=>{
    :await db.from('safety_report_email_deliveries').insert({report_id:report.id,status:'pending'}).select('report_id').maybeSingle();
   if(claim.error||!claim.data){skipped++;continue}
   try{
-   const site=(Deno.env.get('RIDE_SHARE_SITE_URL')||'https://adamingwell.github.io/western-ride-share').replace(/\\/$/,'');
+   const site=(Deno.env.get('RIDE_SHARE_SITE_URL')||'https://adamingwell.github.io/western-ride-share').replace(/\/$/,'');
    const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+resendKey,'Content-Type':'application/json','Idempotency-Key':'safety-report-'+report.id},body:JSON.stringify({from:'Western Ride Share Safety <notifications@adamingwell.westernstudent.com>',to:addresses,subject:'New safety report — Western Ride Share',text:'A new safety report was submitted. Review it in the restricted dashboard: '+site+'/admin.html'})});
    const body=await response.json().catch(()=>({}));
    await db.from('safety_report_email_deliveries').update({status:response.ok?'sent':'failed',provider_id:response.ok?body.id||null:null,attempted_at:new Date().toISOString()}).eq('report_id',report.id);
