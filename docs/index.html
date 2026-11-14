@@ -9,17 +9,16 @@
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-<header class="shell"><a class="brand" href="./"><span aria-hidden="true">W</span>Western Ride Share</a><nav aria-label="Page navigation"><a href="#how">How it works</a><a href="#towns">Communities</a><a href="#pilot">Pilot details</a><a href="./sign-in.html">Sign in</a></nav></header>
+<header class="shell"><a class="brand" href="./"><span aria-hidden="true">W</span>Western Ride Share</a><nav aria-label="Page navigation"><a href="#how">How it works</a><a href="#towns">Communities</a><a href="#pilot">Pilot details</a><a id="account-nav" href="./sign-in.html">Sign in</a></nav></header>
 <main class="shell">
 <section class="hero">
-<div><div class="eyebrow">Unofficial student carpool pilot</div><h1>Share a ride<br><em>to Western.</em></h1><p>Find a seat or offer one on your commute to Western Technical College’s La Crosse campus. Arrange your morning ride and your ride home around your class schedule.</p><a class="cta" href="./sign-in.html">Open the ride board →</a><small>Sign in to view or post rides</small></div>
+<div><div class="eyebrow">Unofficial student carpool pilot</div><h1>Share a ride<br><em>to Western.</em></h1><p>Find a seat or offer one on your commute to Western Technical College’s La Crosse campus. Arrange your morning ride and your ride home around your class schedule.</p><a class="cta" href="./board.html">Open the ride board →</a><small id="signin-hint">Sign in to view or post rides</small></div>
 <aside class="trip" aria-label="Example school commute"><h2>A school day from Tomah</h2><div class="stop"><b>Tomah → Western</b><p>Arrive by 8:00 a.m.</p></div><div class="stop"><b>Western → Tomah</b><p>Leave after your last class</p></div></aside>
 </section>
 <section class="signin-panel" id="sign-in" aria-labelledby="signin-title">
 <h2 id="signin-title">Sign in to Western Ride Share</h2>
 <p>Create a Western Ride Share account to view rides, offer or request a seat, and coordinate privately.</p>
 <a class="cta" href="./sign-in.html">Sign in or create account →</a>
-<p style="margin:12px 0 0"><a href="./board.html">Already signed in? Open the ride board</a></p>
 </section>
 <section class="section" id="how"><h2>How it works</h2><div class="cards">
 <article class="card"><h3>Request or offer a seat</h3><p>Choose your town, travel days, and the time you need to arrive or leave.</p></article>
@@ -33,5 +32,31 @@
 <details><summary>What would help a school pilot?</summary><p>Support with recruiting a small group of riders and drivers, plus an approved email sending domain for notifications.</p></details>
 </section>
 <footer>Western Ride Share · Student-led, unofficial pilot <span aria-hidden="true">·</span> <a href="./terms.html">Terms of Service</a> <span aria-hidden="true">·</span> <a href="./privacy.html">Privacy Policy</a><div class="developer-credit" style="display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid #789b8240"><img src="https://raw.githubusercontent.com/Adamingwell/hollow-meridian-site/main/media/chaotic-zen.webp" alt="Chaotic Zen Games logo" width="120" height="80" loading="lazy" style="width:120px;height:auto;max-height:80px;object-fit:contain"><span>Independently developed by <strong>Chaotic Zen Development Studio</strong></span></div></footer>
-</main></body>
+</main>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './supabase-config.js';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const accountNav = document.querySelector('#account-nav');
+const signInPanel = document.querySelector('#sign-in');
+const signInHint = document.querySelector('#signin-hint');
+
+function renderSession(session) {
+  const signedIn = Boolean(session);
+  accountNav.textContent = signedIn ? 'Ride board' : 'Sign in';
+  accountNav.href = signedIn ? './board.html' : './sign-in.html';
+  signInPanel.hidden = signedIn;
+  signInHint.hidden = signedIn;
+}
+
+supabase.auth.onAuthStateChange((_event, session) => renderSession(session));
+window.addEventListener('pageshow', async (event) => {
+  if (event.persisted) {
+    const { data } = await supabase.auth.getSession();
+    renderSession(data.session);
+  }
+});
+</script>
+</body>
 </html>
