@@ -53,7 +53,7 @@ Deno.serve(async (request) => {
       from:'Western Ride Share <notifications@adamingwell.westernstudent.com>',
       to:[recipient.user.email],
       subject:'New message on Western Ride Share',
-      text:'You have a new private message about a ride. Sign in to read and reply: '+siteUrl.replace(/\\/$/,'')+'/board.html',
+      text:'You have a new private message about a ride. Sign in to read and reply: '+(siteUrl.endsWith('/')?siteUrl.slice(0,-1):siteUrl)+'/board.html',
     })
   });
   const result=await response.json().catch(()=>({}));
