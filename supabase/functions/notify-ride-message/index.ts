@@ -12,6 +12,7 @@ Deno.serve(async (request) => {
   const url=Deno.env.get('SUPABASE_URL')!;
   const serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const resendKey=Deno.env.get('RESEND_API_KEY');
+  const siteUrl=Deno.env.get('RIDE_SHARE_SITE_URL') || 'https://adamingwell.github.io/western-ride-share-preview';
   if(!resendKey)return reply(503,{error:'Email notifications not configured'});
   const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
   const {data:{user},error:authError}=await admin.auth.getUser(token);
@@ -52,7 +53,7 @@ Deno.serve(async (request) => {
       from:'Western Ride Share <notifications@adamingwell.westernstudent.com>',
       to:[recipient.user.email],
       subject:'New message on Western Ride Share',
-      text:'You have a new private message about a ride. Sign in to read and reply: https://adamingwell.github.io/western-ride-share-preview/board.html',
+      text:'You have a new private message about a ride. Sign in to read and reply: '+siteUrl.replace(/\\/$/,'')+'/board.html',
     })
   });
   const result=await response.json().catch(()=>({}));
