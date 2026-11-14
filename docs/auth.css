@@ -2,3 +2,8 @@
 .signup-agreement{margin:18px 0 8px;padding:13px 15px;background:#eaf4e5;border:1px solid #b4cfb5;border-radius:12px;font-size:.9rem;line-height:1.5}.signup-agreement[hidden]{display:none}.signup-agreement label{display:block;margin:0;font-weight:500}.signup-agreement input{width:auto;vertical-align:middle;margin-right:7px}.signup-agreement a{color:#123e36;text-decoration:underline}
 
 #signup-profile[hidden]{display:none}#signup-profile .muted{font-size:.84rem;line-height:1.5;color:#52655b;margin:10px 0}#signup-profile small{font-weight:400}
+
+.auth-card [hidden]{display:none}
+.auth-card .password-visibility{display:flex;align-items:center;gap:8px;font-weight:500}
+.auth-card .password-visibility input{width:auto;margin:0}
+.password-match-error{margin:6px 0;color:#a12d2d}

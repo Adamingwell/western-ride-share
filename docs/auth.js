@@ -1,3 +1,4 @@
+import { setupPasswordConfirmation } from './password-confirmation.js';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './supabase-config.js';
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -6,6 +7,7 @@ const status = document.querySelector('#auth-status');
 const submit = document.querySelector('#auth-submit');
 const email = document.querySelector('#email');
 const password = document.querySelector('#password');
+const passwordConfirmation = setupPasswordConfirmation(form);
 const heading = document.querySelector('#auth-heading');
 const agreement = document.querySelector('#signup-agreement');
 const acceptTerms = document.querySelector('#acceptTerms');
@@ -38,7 +40,9 @@ function setMode(next) {
   fullName.required = next === 'signup';
   acceptTerms.required = next === 'signup';
   if (next !== 'signup') acceptTerms.checked = false;
+  document.querySelector('#password-label').hidden = next === 'reset';
   password.hidden = next === 'reset';
+  passwordConfirmation.setEnabled(next === 'signup');
   password.required = next !== 'reset';
   password.minLength = next === 'signup' ? 12 : 1;
   password.autocomplete = next === 'signup' ? 'new-password' : 'current-password';
@@ -46,7 +50,9 @@ function setMode(next) {
 }
 document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
 form.addEventListener('submit', async event => {
-  event.preventDefault(); submit.disabled = true; setStatus('Working…');
+  event.preventDefault();
+  if (mode === 'signup' && !passwordConfirmation.check()) return;
+  submit.disabled = true; setStatus('Working…');
   try {
     const address = email.value.trim();
     const redirectTo = new URL('./board.html', location.href).href;
