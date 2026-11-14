@@ -6,7 +6,16 @@ Deno.serve(async req=>{
  if(req.method!=='POST')return json(405,{error:'Method not allowed'});
  const supplied=req.headers.get('authorization')?.replace(/^Bearer /i,'');
  const serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
- if(!supplied||!serviceKey||supplied!==serviceKey)return json(403,{error:'Forbidden'});
+ // The Supabase gateway verifies the JWT signature (verify_jwt:true).
+ // Accept only a gateway-verified service_role token; its raw value need not match the runtime key.
+ let serviceRole=false;
+ try {
+  if(supplied){
+   const payload=JSON.parse(atob(supplied.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+   serviceRole=payload.role==='service_role';
+  }
+ }catch{}
+ if(!serviceRole||!serviceKey)return json(403,{error:'Forbidden'});
  const url=Deno.env.get('SUPABASE_URL'),resendKey=Deno.env.get('RESEND_API_KEY');
  if(!url||!resendKey)return json(503,{error:'Missing configuration'});
  const db=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
