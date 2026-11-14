@@ -53,35 +53,69 @@ create policy "Users update their own rides" on public.rides
 create policy "Only conversation participants read messages" on public.ride_messages
   for select to authenticated
   using ((select auth.uid()) in (poster_id, visitor_id));
--- Inserts are validated against the ride owner and existing thread membership.
--- The sender must be the authenticated user. First messages must come from the visitor.
-create policy "Participants can send messages" on public.ride_messages
-  for insert to authenticated
-  with check (
-    sender_id = (select auth.uid())
-    and exists (
-      select 1 from public.rides r
-      where r.id = ride_id and r.owner_id = poster_id
-    )
-    and (
-      (
-        sender_id = visitor_id
-        and not exists (
-          select 1 from public.ride_messages prior
-          where prior.thread_id = ride_messages.thread_id
-        )
-      )
-      or (
-        exists (
-          select 1 from public.ride_messages prior
-          where prior.thread_id = ride_messages.thread_id
-            and prior.ride_id = ride_messages.ride_id
-            and prior.poster_id = ride_messages.poster_id
-            and prior.visitor_id = ride_messages.visitor_id
-        )
-      )
-    )
-  );
+-- Message writes use a narrowly scoped function rather than direct table INSERT.
+-- This prevents forged participants, mismatched threads, and RLS recursion.
+create or replace function public.send_ride_message(
+  p_ride_id uuid,
+  p_visitor_id uuid,
+  p_subject text,
+  p_body text,
+  p_thread_id uuid default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_sender uuid := auth.uid();
+  v_poster uuid;
+  v_thread uuid;
+  v_existing public.ride_messages%rowtype;
+begin
+  if v_sender is null then
+    raise exception 'Authentication required';
+  end if;
+  if char_length(btrim(coalesce(p_body, ''))) not between 1 and 1000
+     or char_length(btrim(coalesce(p_subject, ''))) not between 1 and 200 then
+    raise exception 'Invalid message';
+  end if;
+
+  select owner_id into v_poster from public.rides where id = p_ride_id;
+  if v_poster is null or p_visitor_id is null or p_visitor_id = v_poster then
+    raise exception 'Invalid ride or participants';
+  end if;
+
+  if p_thread_id is null then
+    if v_sender <> p_visitor_id then
+      raise exception 'Only a prospective rider can start a thread';
+    end if;
+    v_thread := gen_random_uuid();
+  else
+    select * into v_existing from public.ride_messages
+      where thread_id = p_thread_id
+      order by sent_at, id limit 1;
+    if not found
+       or v_existing.ride_id <> p_ride_id
+       or v_existing.poster_id <> v_poster
+       or v_existing.visitor_id <> p_visitor_id
+       or v_sender not in (v_poster, p_visitor_id) then
+      raise exception 'Not a participant in this thread';
+    end if;
+    v_thread := p_thread_id;
+  end if;
+
+  insert into public.ride_messages
+    (thread_id, ride_id, poster_id, visitor_id, sender_id, subject, body)
+  values
+    (v_thread, p_ride_id, v_poster, p_visitor_id, v_sender, p_subject, p_body);
+  return v_thread;
+end;
+$$;
+
+revoke all on function public.send_ride_message(uuid, uuid, text, text, uuid) from public;
+revoke all on function public.send_ride_message(uuid, uuid, text, text, uuid) from anon;
+grant execute on function public.send_ride_message(uuid, uuid, text, text, uuid) to authenticated;
 
 create policy "Users read own notification preference" on public.notification_preferences
   for select to authenticated using (user_id = (select auth.uid()));
