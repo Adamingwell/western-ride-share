@@ -18,7 +18,7 @@ Deno.serve(async request => {
  try{const body=await request.json();reportId=body.reportId}catch{return reply(400,{error:'Invalid JSON'})}
  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(reportId||''))return reply(400,{error:'Invalid report id'});
  const {data:report,error:reportError}=await db.from('safety_reports').select('id,reporter_id,created_at').eq('id',reportId).maybeSingle();
- if(reportError)return reply(500,{error:'Unable to verify report'});
+ if(reportError){console.error('Safety report lookup failed',{code:reportError.code,message:reportError.message});return reply(500,{error:'Unable to verify report',code:reportError.code||'unknown'});}
  if(!report||report.reporter_id!==user.id)return reply(404,{error:'Report not found'});
  // Prevent an old report from being repeatedly used to initiate notifications.
  if(Date.now()-new Date(report.created_at).getTime()>15*60*1000)return reply(409,{error:'Report notification window expired'});
