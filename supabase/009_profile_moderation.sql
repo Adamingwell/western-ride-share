@@ -1,4 +1,6 @@
 -- 009: allow legacy members to complete private profiles; add administrator moderation.
+grant insert on public.member_profiles to authenticated;
+
 create policy "Members create own profile" on public.member_profiles
  for insert to authenticated with check (user_id=(select auth.uid()));
 
