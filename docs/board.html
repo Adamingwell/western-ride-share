@@ -15,26 +15,14 @@ input[type=checkbox]{accent-color:#26734f}.hero button:focus-visible{outline-col
 button:hover:not(:disabled){filter:brightness(1.07)}button:disabled{opacity:.65;cursor:wait}
 @media(max-width:700px){header,main{padding:15px}.hero h1{font-size:clamp(38px,10vw,64px)}}
 
-.site-header{flex-wrap:wrap}.site-nav{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.site-nav a,.site-nav button{font:inherit;font-size:.9rem;padding:9px 11px;border-radius:9px;background:#143f35;color:#fff;text-decoration:none}
-.site-nav a:hover,.site-nav button:hover{background:#24594b}
+#accountDialog a:focus-visible{outline:3px solid #41774f;outline-offset:3px}
 #adminLink[hidden]{display:none}
-.site-nav a:focus-visible,#accountDialog a:focus-visible{outline:3px solid #41774f;outline-offset:3px}
 #accountEmail{overflow-wrap:anywhere}#accountDialog form{margin:16px 0}#accountDialog a{color:#143f35;font-weight:700}
 
-.home-button{display:inline-flex;align-items:center;gap:10px;padding:7px 15px 7px 7px;min-height:48px;color:#f7faef;background:#143f35;border:1px solid #376858;border-radius:14px;text-decoration:none;box-shadow:0 4px 12px #173a2926}
-.home-button strong{font:800 clamp(1rem,3.6vw,1.25rem)/1.1 "Bricolage Grotesque",Geist,system-ui,sans-serif}
-.home-button:hover{background:#245848}.home-button:focus-visible{outline:3px solid #41774f;outline-offset:4px}
-.home-mark{width:38px;height:38px;flex:none;display:block;background:#e6fb93;border-radius:10px}
 .unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;padding:0 6px;margin-left:5px;border-radius:99px;background:#b72c32;color:#fff;font-size:12px;font-weight:800;vertical-align:middle}.unread-badge[hidden]{display:none!important}.inbox-thread{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:5px 0;text-align:left}.inbox-thread.is-unread{background:#e5f0cf;border:2px solid #5a8c4c}.thread-unread-label{display:inline-block;flex:none;background:#b72c32;color:#fff;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:800}.message-entry.is-unread{border-left:4px solid #b72c32;padding-left:10px}.message-entry .thread-unread-label{margin-left:8px}
 
 /* Mobile-first refinements: comfortable controls, readable cards and compact dialogs. */
 @media (max-width: 700px) {
-  .site-header{align-items:stretch;gap:12px}
-  .home-button{width:100%;justify-content:center;min-width:0}
-  .home-button strong{overflow-wrap:anywhere}
-  .site-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:8px}
-  .site-nav a,.site-nav button{display:flex;justify-content:center;align-items:center;min-height:44px;min-width:0;text-align:center}
   .hero{border-radius:18px;padding:28px 20px}
   .hero h1{line-height:1.04;overflow-wrap:break-word}
   .hero .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -62,9 +50,9 @@ button:hover:not(:disabled){filter:brightness(1.07)}button:disabled{opacity:.65;
 @media (max-width: 370px) {
   .filters{grid-template-columns:1fr}
   .hero .actions{grid-template-columns:1fr}
-  .site-nav{grid-template-columns:1fr 1fr}
 }
 </style>
+<link rel="stylesheet" href="./site-header.css">
 <header class="site-header" id="home">
   <a class="home-button" href="./" aria-label="Western Ride Share home">
     <svg class="home-mark" viewBox="0 0 40 40" aria-hidden="true">
