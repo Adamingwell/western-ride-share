@@ -24,7 +24,15 @@ Deno.serve(async request => {
  if(Date.now()-new Date(report.created_at).getTime()>15*60*1000)return reply(409,{error:'Report notification window expired'});
  const {error:claimError}=await db.from('safety_report_email_deliveries').insert({report_id:reportId,status:'pending'});
  if(claimError){
-  if(claimError.code==='23505')return reply(200,{status:'already_processed'});
+  if(claimError.code==='23505'){
+  // Retry only explicitly failed attempts; do not replay pending or sent alerts.
+  const {data:retry,error:retryError}=await db.from('safety_report_email_deliveries')
+    .update({status:'pending',attempted_at:new Date().toISOString()})
+    .eq('report_id',reportId).eq('status','failed')
+    .select('report_id').maybeSingle();
+  if(retryError)return reply(500,{error:'Unable to retry notification'});
+  if(!retry)return reply(200,{status:'already_processed'});
+ }
   return reply(500,{error:'Unable to claim notification'});
  }
  const {data:admins,error:adminsError}=await db.from('site_administrators').select('user_id').limit(20);
@@ -32,9 +40,9 @@ Deno.serve(async request => {
  const addresses:string[]=[];
  for(const admin of admins){const {data}=await db.auth.admin.getUserById(admin.user_id);if(data?.user?.email&&data.user.email_confirmed_at)addresses.push(data.user.email)}
  if(!addresses.length){await db.from('safety_report_email_deliveries').update({status:'failed'}).eq('report_id',reportId);return reply(503,{error:'No confirmed administrator email'})}
- const site='https://adamingwell.github.io/western-ride-share-preview/admin.html';
+ const site=(Deno.env.get('RIDE_SHARE_SITE_URL') || 'https://adamingwell.github.io/western-ride-share').replace(/\/$/,'')+'/admin.html';
  let response:Response;
- try{response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+resendKey,'Content-Type':'application/json'},body:JSON.stringify({
+ try{response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+resendKey,'Content-Type':'application/json','Idempotency-Key':'safety-report-'+reportId},body:JSON.stringify({
  from:'Western Ride Share Safety <notifications@adamingwell.westernstudent.com>',
  to:addresses,subject:'New safety report — Western Ride Share',
  text:'A new safety report has been submitted. Sign in to the restricted administrator dashboard to review it: '+site+'\n\nDo not reply to this automated notification.'
